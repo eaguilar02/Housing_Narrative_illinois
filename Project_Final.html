@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Final Narrative Project</title>
+  <meta name="description" content="description" />
+  <meta name="author" content="author" />
+  <meta name="keywords" content="keywords" />
+  <link rel="stylesheet" href="./stylesheet.css" type="text/css" />  
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body {
+      font-family: 'Trebuchet MS', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    .b {
+      width: 3%;
+      background: black;
+      color: whitesmoke;
+      border-radius: 100%;
+      font-weight: bold;
+      padding: 1em;
+      border: none;
+    }
+
+    .b:hover {
+      background: rgb(105, 105, 105);
+      color: rgb(202, 202, 202);
+      cursor: pointer;
+      transition: background 0.5s;
+    }
+
+    .mySlides {
+      display: none;
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 65vh;
+    }
+
+    .content {
+      word-wrap: break-word;
+      width: 60vw;
+      margin: 0 auto;
+      padding-top: 5px;
+    }
+
+    hr.fancy {
+      width: 70%;
+      opacity: 0.3;
+      height: 1px;
+      background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
+    }
+
+    h1 {
+      margin-left: 15px;
+      margin-top: 25px;
+      font-weight: bold;
+    }
+
+    p.author {
+      margin-left: 20%;
+    }
+
+    .mySlides{
+      margin-left: 2%;
+      margin-right: 2%;
+      width:800px; 
+      height:600px; 
+      padding-top: 2%;
+      padding-bottom: 2%;
+      border:1px solid #ccc;
+
+    }
+    #my_dataviz {
+       height: 400px;
+       text-align: center;
+    }
+  </style>
+
+  <script>
+    let slideIndex = 1;
+
+    function plusSlides(n) {
+      showSlides(slideIndex += n);
+    }
+
+    function currentSlide(n) {
+      showSlides(slideIndex = n);
+    }
+
+    function showSlides(n) {
+      let i;
+      let slides = document.getElementsByClassName("mySlides");
+      if (n > slides.length) { slideIndex = 1 }
+      if (n < 1) { slideIndex = slides.length }
+      for (i = 0; i < slides.length; i++) {
+        slides[i].style.display = "none";
+      }
+      slides[slideIndex - 1].style.display = "block";
+    }
+
+    window.onload = function () {
+      showSlides(slideIndex);
+    }
+  </script>
+
+</head>
+
+
+
+<body>
+
+  <h1>Narrative Visualization: In Progress</h1>
+  <hr class="fancy" />
+  <p class="author">Emily Aguilar, 2025</p>
+  <hr class="fancy" />
+
+  <div class="content">
+    <p>Hello ipsum dolor sit amet, consectetur adipiscing elit. Etiam elementum et dolor vel mollis. Vestibulum congue
+      ultricies aliquet. Mauris sit amet viverra nisl, at eleifend diam. Duis hendrerit ac massa consectetur feugiat.
+      Curabitur sit amet tellus at turpis semper posuere ac ac nunc. Aenean quis odio ornare, vulputate sem eget,
+      faucibus purus. Nulla sit amet sagittis est. Aenean gravida fermentum vulputate. Pellentesque vitae enim non est
+      semper ultricies eget id urna. Curabitur et sagittis nulla. Praesent nulla ex, volutpat non blandit volutpat,
+      ornare quis risus.</p>
+  </div>
+ 
+  <div id="chart_income"></div>
+
+  <!-- Keep only this D3 -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+<h1>Pick a CSV</h1>
+<input type="file" id="file" accept=".csv" />
+<div id="table"></div>
+
+  <script>
+    const fileInput = document.getElementById("file");
+
+    fileInput.addEventListener("change", e => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = evt => {
+        const text = evt.target.result;
+        const rows = d3.csvParse(text, d3.autoType);
+        renderTable(rows);
+      };
+      reader.readAsText(file);
+      
+        });
+
+    function renderTable(rows) {
+      d3.select("#table").html(""); // clear
+      if (!rows.length) return;
+
+      const columns = Object.keys(rows[0]);
+      const table = d3.select("#table").append("table");
+      const thead = table.append("thead").append("tr");
+      const tbody = table.append("tbody");
+
+      thead.selectAll("th")
+        .data(columns)
+        .enter().append("th")
+        .text(d => d);
+
+      const tr = tbody.selectAll("tr")
+        .data(rows)
+        .enter().append("tr");
+
+      tr.selectAll("td")
+        .data(row => columns.map(c => row[c]))
+        .enter().append("td")
+        .text(d => d);
+    }
+    
+  </script>
+
+
+<!--
+  <div class="container">
+    <button class="b" onclick="plusSlides(-1)">&#10094;</button>
+
+    <div id="my_dataviz" class="mySlides" src="about:blank" style="background:#FAF8F0;"></div>
+    <div class="mySlides" src="about:blank" style="background:green"></div>
+    <div class="mySlides" src="about:blank" style="background:red"></div>
+    <button class="b" onclick="plusSlides(1)">&#10095;</button>
+  </div>
+-->
+</body>
+  
+</html>
