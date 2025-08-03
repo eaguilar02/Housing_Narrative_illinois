@@ -7,7 +7,6 @@
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
     body { font-family: 'Trebuchet MS', sans-serif; margin:0; padding-bottom:6%; }
-    /* Make chart and controls fluid up to 820px */
 #bucket-chart,
 #myProgress,
 .controls,
@@ -17,7 +16,6 @@
   margin-right: auto;
 }
 
-/* Flex row: button | progress | button */
 .controls{
   display: flex;
   align-items: center;
@@ -25,7 +23,6 @@
   margin-top: 10px;
 }
 
-/* Progress bar grows to fill space between buttons */
 #myProgress{
   flex: 1;
   height: 8px;
@@ -40,7 +37,6 @@
   transition: width .6s linear;
 }
 
-/* Circular arrow buttons that scale with viewport */
 .nav{
   border: none;
   border-radius: 50%;
@@ -50,10 +46,9 @@
   display: grid;
   place-items: center;
 
-  /* responsive sizing: min 36px, prefer 5vw, max 48px */
   inline-size: clamp(36px, 5vw, 48px);
   block-size: clamp(36px, 5vw, 48px);
-  padding: 0; /* grid centering handles it */
+  padding: 0; 
   cursor: pointer;
 }
 .nav:hover{
@@ -62,7 +57,6 @@
   transition: background .3s;
 }
 
-/* Center the toggle button, remove inline styles */
 .controls-secondary{
   display: flex;
   justify-content: center;
@@ -82,17 +76,15 @@
   transition: background .3s;
 }
 
-/* Make the chart container fluid too */
 #bucket-chart{ width: min(100%, 820px); }
 
-/* Small screens: stack controls vertically */
 @media (max-width: 420px){
   .controls{
     flex-direction: column;
     align-items: stretch;
   }
   .nav{
-    align-self: center;   /* center arrow buttons when stacked */
+    align-self: center;  
   }
 }
 
@@ -157,7 +149,6 @@
     }
     .grid path { display: none; }
 
-    /* prediction outlines + labels */
     .outline { fill: none; pointer-events:none; }
     .outline.guess { stroke:#cd3c3c; stroke-width:3; }
     .outline.actual{ stroke:#4fcf4d; stroke-width:3; }
@@ -190,7 +181,6 @@
   
   <div class="container" style="position:relative;">
 
-<!-- Controls: arrows + progress bar -->
 <div class="controls">
   <button class="nav prev" onclick="plusSlides(-1)" aria-label="Previous">&#10094;</button>
 
@@ -248,14 +238,13 @@
       .attr("x", width/2).attr("y", height + 85)
       .attr("text-anchor", "middle");
 
-    // --- data holders ---
     let householdDataByYear = new Map();
     let wageDataByYear = new Map();
-    let affordabilityByYear = new Map(); // Year -> {Year, RequiredIncome, AvgHomeValue}
+    let affordabilityByYear = new Map(); 
     let years  = [];
     let yearIdx = 0;
-    let useHouseholdData = true; // start with Household (Illinois)
-    let currentYearData = [];    // bars currently rendered (for outlines)
+    let useHouseholdData = true; 
+    let currentYearData = [];    
 
     const LABELS = {
       household: { unitPlural: "Households" },
@@ -400,9 +389,9 @@ const ANNOTATIONS = {
 
 function normLabel(s){
   return String(s).toLowerCase()
-    .replace(/[\s\u2013\u2014-]+/g, '-') // normalize spaces & dashes to single '-'
-    .replace(/[,]/g, '')                 // drop commas
-    .replace(/\$/g, '')                  // drop dollar signs
+    .replace(/[\s\u2013\u2014-]+/g, '-') 
+    .replace(/[,]/g, '')                 
+    .replace(/\$/g, '')                  
     .trim();
 }
 function findBucketLabelApprox(targetLabel, domainLabels){
@@ -417,7 +406,6 @@ function findBucketLabelApprox(targetLabel, domainLabels){
 
 
 
-    // Normalize both CSVs into the same shape -> { Year, bucketId, bucket, share, count, geo }
     function normalize(rows, kind) {
       return rows.map(d => {
         const bucketId = kind === "household" ? +d["Household Income Bucket ID"] : +d["Wage Bin ID"];
@@ -427,7 +415,6 @@ function findBucketLabelApprox(targetLabel, domainLabels){
       });
     }
 
-    // --- Load all three data files ---
     Promise.all([ d3.csv(URL1), d3.csv(URL2), d3.text(AFF_URL) ])
       .then(([householdRows, wageRows, affordText]) => {
         // Household & Wage
