@@ -7,6 +7,94 @@
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
     body { font-family: 'Trebuchet MS', sans-serif; margin:0; padding-bottom:6%; }
+    /* Make chart and controls fluid up to 820px */
+#bucket-chart,
+#myProgress,
+.controls,
+.controls-secondary {
+  width: min(100%, 820px);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Flex row: button | progress | button */
+.controls{
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin-top: 10px;
+}
+
+/* Progress bar grows to fill space between buttons */
+#myProgress{
+  flex: 1;
+  height: 8px;
+  background: #eee;
+  border-radius: 999px;
+  overflow: hidden;
+}
+#myBar{
+  height: 100%;
+  width: 0%;
+  background: #726f72;
+  transition: width .6s linear;
+}
+
+/* Circular arrow buttons that scale with viewport */
+.nav{
+  border: none;
+  border-radius: 50%;
+  font-weight: bold;
+  color: whitesmoke;
+  background: rgb(71, 64, 66);
+  display: grid;
+  place-items: center;
+
+  /* responsive sizing: min 36px, prefer 5vw, max 48px */
+  inline-size: clamp(36px, 5vw, 48px);
+  block-size: clamp(36px, 5vw, 48px);
+  padding: 0; /* grid centering handles it */
+  cursor: pointer;
+}
+.nav:hover{
+  background: rgb(3,3,3);
+  color: rgb(202,202,202);
+  transition: background .3s;
+}
+
+/* Center the toggle button, remove inline styles */
+.controls-secondary{
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+.toggle{
+  background-color: rgb(71, 64, 66);
+  color: whitesmoke;
+  border: none;
+  padding: .8em 1.1em;
+  border-radius: 10%;
+  cursor: pointer;
+}
+.toggle:hover{
+  background: rgb(3,3,3);
+  color: rgb(231,229,229);
+  transition: background .3s;
+}
+
+/* Make the chart container fluid too */
+#bucket-chart{ width: min(100%, 820px); }
+
+/* Small screens: stack controls vertically */
+@media (max-width: 420px){
+  .controls{
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .nav{
+    align-self: center;   /* center arrow buttons when stacked */
+  }
+}
 
     hr.fancy{ 
       width:70%; 
@@ -101,16 +189,22 @@
   <div class="tooltip" id="tooltip"></div>
   
   <div class="container" style="position:relative;">
-    <button class="b" onclick="plusSlides(-1)" style="position:absolute;top:-25%;right:70%;margin-top: 10%;z-index: 1000;">&#10094;</button>
 
-    <div id="myProgress" style="margin-left: auto; margin-right: auto;">
-      <div id="myBar"></div>
-    </div>
+<!-- Controls: arrows + progress bar -->
+<div class="controls">
+  <button class="nav prev" onclick="plusSlides(-1)" aria-label="Previous">&#10094;</button>
 
-    <button class="b" onclick="plusSlides(1)" style="position:absolute;top:-25%;right:28%;margin-top: 10%;z-index: 1000;">&#10095;</button>
-    
-    <button id="toggleBtn" class="toggle" style="position:relative;border:none;padding:1em;border-radius: 10%;margin-left: 47%;margin-top: 2%;color: whitesmoke;" type="button" onclick="toggleDataset()">View Wages</button>
+  <div id="myProgress">
+    <div id="myBar"></div>
   </div>
+
+  <button class="nav next" onclick="plusSlides(1)" aria-label="Next">&#10095;</button>
+</div>
+
+
+<div class="controls-secondary">
+  <button id="toggleBtn" class="toggle" type="button" onclick="toggleDataset()">View Wages</button>
+</div>
 
   <div style="width:820px;margin:40px 32% auto; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
     <strong>Year: <span id="yearLabel">—</span></strong>
