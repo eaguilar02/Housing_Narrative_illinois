@@ -15,7 +15,7 @@
       background-image:linear-gradient(to right, rgba(0,0,0,0), rgba(0,0,0,.75), rgba(0,0,0,0)); }
     
     h1{
-      margin:25px 0 20px 65px;
+      margin:25px 0 20px 20%;
       font-weight:bold; }
 
     p.author{ margin-left:20%; }
@@ -32,13 +32,13 @@
       overflow:hidden; margin: 10px 20px;
     }
     #myBar{
-      height:100%; width:0%; background:#e0bade;
+      height:100%; width:0%; background:#726f72;
       transition: width .6s linear; 
     }
 
     .b {
       width: 3%;
-      background-color:rgb(218, 157, 167);
+      background-color:rgb(71, 64, 66);
       color: whitesmoke;
       border-radius: 100%;
       font-weight: bold;
@@ -47,16 +47,16 @@
     }
 
     .b:hover {
-      background: rgb(135, 89, 126);
+      background: rgb(3, 3, 3);
       color: rgb(202, 202, 202);
       cursor: pointer;
       transition: background 0.5s;
     }
     .toggle{
-      background-color:rgb(218, 157, 167);
+      background-color:rgb(71, 64, 66);
     }
     .toggle:hover {
-      background: rgb(135, 89, 126);
+      background: rgb(3, 3, 3);
       color: rgb(231, 229, 229);
       cursor: pointer;
       transition: background 0.5s;
@@ -71,11 +71,19 @@
 
     /* prediction outlines + labels */
     .outline { fill: none; pointer-events:none; }
-    .outline.guess { stroke:#f5a142; stroke-width:3; }
-    .outline.actual{ stroke:#d9534f; stroke-width:3; }
+    .outline.guess { stroke:#cd3c3c; stroke-width:3; }
+    .outline.actual{ stroke:#4fcf4d; stroke-width:3; }
     .pill{ padding:2px 6px; border-radius:6px; font-size:12px; }
     .pill.guess{ background:#fde9cf; color:#8a5a10; }
     .pill.actual{ background:#f9d6d5; color:#7d1d1a; }
+
+    .anno-group text.anno-title { font-weight: 700; }
+    .anno-group text.anno-body  { font-size: 12px; fill:#444; }
+    .anno-callout { stroke:#444; stroke-width:1; fill:none; }
+    .anno-box { fill:#fff; stroke:#bbb; stroke-width:1; rx:3; ry:9; }
+
+    p{font-weight: lighter;
+    font-family: Georgia, 'Times New Roman', Times, serif;}
   </style>
 </head>
 <body>
@@ -84,9 +92,9 @@
   <hr class="fancy" />
   <p class="author">Emily Aguilar, 2025</p>
   <hr class="fancy" />
-  
-  <div style="width:950px;margin-left: 10%;">
-    <p style="margin:2% 0 0 20%;">This project examines the growing gap between median income and home prices in Illinois from 2013 to 2023. It allows users to explore household income distribution over this period and compare it to the income needed to afford a home, calculated using the 3× affordability rule. Users can also examine the distribution of individual wages within Illinois for additional context. The goal of this analysis is to shed light on the potential challenges posed by rising housing prices outpacing household income growth.</p>
+  <br>
+  <div style="width:70%;margin-left: 10%;">
+    <p style="margin:2% 0 0 20%;">This project examines the growing gap between median income and home prices in Illinois from 2014 to 2023. It allows users to explore household income distribution over this period and compare it to the income needed to afford a home, calculated using the 3× affordability rule. Users can also examine the distribution of individual wages within Illinois for additional context. The goal of this analysis is to shed light on the potential challenges posed by rising housing prices outpacing household income growth.</p>
   </div>
 
   <div id="bucket-chart" style="margin-left: auto;margin-right: auto; margin-top: 3%;"></div>
@@ -114,8 +122,8 @@
 
   <script>
     // --- layout ---
-    const margin = {top: 10, right: 70, bottom: 100, left: 70},
-          width  = 800 - margin.left - margin.right,
+    const margin = {top: 10, right: 150, bottom: 100, left: 40},
+          width  = 1000 - margin.left - margin.right,
           height = 520 - margin.top - margin.bottom;
     
     const svg = d3.select("#bucket-chart").append("svg")
@@ -130,8 +138,9 @@
     const xAxisG = svg.append("g").attr("transform", `translate(0,${height})`);
     const yAxisG = svg.append("g");
     const barsG  = svg.append("g");
-    const outlinesG = svg.append("g"); // overlays for guess/actual outlines
-    const labelsG   = svg.append("g"); // labels above outlines
+    const outlinesG = svg.append("g"); 
+    const labelsG   = svg.append("g");
+    const annG = svg.append("g").attr("class","anno-group"); 
     const xGridG = svg.append("g").attr("class", "grid x-grid");
     const yGridG = svg.append("g").attr("class", "grid y-grid");
     
@@ -161,8 +170,158 @@
 
     const URL1 = "https://raw.githubusercontent.com/eaguilar02/Housing_Narrative_illinois/main/HouseholdIncome.csv";
     const URL2 = "https://raw.githubusercontent.com/eaguilar02/Housing_Narrative_illinois/main/Wage%20Distribution.csv";
-    const AFF_URL = "https://raw.githubusercontent.com/eaguilar02/Housing_Narrative_illinois/refs/heads/main/Affordability%20-%20Sheet1.csv";
+    const AFF_URL = "https://raw.githubusercontent.com/eaguilar02/Housing_Narrative_illinois/main/Affordability%20-%20Sheet1.csv";
     const STATE = "Illinois";
+
+
+
+    // --- Annotation helpers ---
+function barCenterX(bucketLabel){
+  const x0 = x(bucketLabel);
+  if (x0 == null) return null;
+  return x0 + x.bandwidth()/2;
+}
+function barTopY(bucketLabel){
+  const rec = currentYearData.find(d => d.bucket === bucketLabel);
+  if (!rec) return null;
+  return y(rec.share); // top of the bar
+}
+
+    function drawAnnotation({ anchorType, bucket, title, body, dx=0, dy=-18 }) {
+      // Choose anchor (where the callout points)
+      let ax = null, ay = null;
+      if (anchorType === "bucketTop" && bucket){
+        const domain = x.domain();
+        const matched = findBucketLabelApprox(bucket, domain);
+        if (matched){
+          ax = barCenterX(matched);
+          ay = barTopY(matched);
+        } else {
+          // fallback: point to the largest bar so the note still shows
+          const maxRec = currentYearData.reduce((a,b)=> (a && a.share > b.share) ? a : b, null);
+          if (maxRec){
+            ax = barCenterX(maxRec.bucket);
+            ay = y(maxRec.share);
+            console.warn(`Annotation bucket not found for year ${document.getElementById("yearLabel").textContent}:`, bucket);
+          }
+
+        }
+      }
+      if (anchorType === "maxShare"){
+        const maxRec = currentYearData.reduce((a,b)=> (a && a.share > b.share) ? a : b, null);
+        if (maxRec){ ax = barCenterX(maxRec.bucket); ay = y(maxRec.share); }
+      }
+
+
+
+
+      if (ax == null || ay == null) return; // if bucket not in this year
+
+      // Text box position
+      const tx = ax + dx;
+      const ty = ay + dy;
+
+      // Group for one annotation
+      const g = annG.append("g");
+      annG.raise();
+
+      // Callout line
+      g.append("path")
+        .attr("class","anno-callout")
+        .attr("d", `M${ax},${ay} L${tx},${ty}`);
+
+      // Text box (size after text measured; we’ll use a simple padding)
+      const padX = 5, padY = 6;
+      const textG = g.append("g");
+
+      const titleText = textG.append("text")
+        .attr("class","anno-title")
+        .attr("x", tx).attr("y", ty)
+        .text(title || "");
+
+      const bodyText = textG.append("text")
+        .attr("class","anno-body")
+        .attr("x", tx).attr("y", ty + 16)
+        .text(body || "");
+
+      // measure
+      const bboxTitle = title ? titleText.node().getBBox() : {width:0,height:0};
+      const bboxBody  = body  ? bodyText.node().getBBox()  : {width:0,height:0};
+      const w = Math.max(bboxTitle.width, bboxBody.width) + padX*2;
+      const h = (title?bboxTitle.height:0) + (body?bboxBody.height:0) + padY*3;
+
+      // box behind text
+      g.insert("rect", "g") // insert before text group
+        .attr("class","anno-box")
+        .attr("x", tx - padX)
+        .attr("y", ty - (title?bboxTitle.height:0) - padY)
+        .attr("width", w)
+        .attr("height", h);
+    }
+
+    // Clear and draw annotations for a specific year
+    function drawAnnotationsForYear(year){
+      annG.selectAll("*").remove();
+      const annos = ANNOTATIONS[year];
+      if (!annos) return;
+      annos.forEach(a => drawAnnotation(a));
+    }
+
+const ANNOTATIONS = {
+  2016: [
+    {
+      anchorType: "maxShare",
+      title: "Starting point (2016)",
+      body:  "Most households are concentrated in this income range.",
+      dx: 40, dy: 35
+    }
+  ],
+  2018: [
+    {
+      anchorType: "bucketTop",
+      bucket: "$50,000 – $59,999", 
+      title: "Mid-income pressure",
+      body:  "Affordability begins to tighten here.",
+      dx: -140, dy: -50
+    }
+  ],
+  2023: [
+    {
+      anchorType: "bucketTop",
+      bucket: "$100,000 – $124,999", 
+      title: "2023 snapshot",
+      body:  "Higher incomes are more common, but homes still outpace income.",
+      dx: -45, dy: -60
+    }
+  ],2014: [
+    {
+      anchorType: "bucketTop",
+      bucket: "$45,000 – $49,999", 
+      title: "2014 Recovery from Subprime Mortgage Crisis",
+      body:  ["House prices start to rise statewide", "following the financial crisis in 2008 in the US. "],
+      dx: -45, dy: -60
+    }
+  ]
+};
+
+function normLabel(s){
+  return String(s).toLowerCase()
+    .replace(/[\s\u2013\u2014-]+/g, '-') // normalize spaces & dashes to single '-'
+    .replace(/[,]/g, '')                 // drop commas
+    .replace(/\$/g, '')                  // drop dollar signs
+    .trim();
+}
+function findBucketLabelApprox(targetLabel, domainLabels){
+  const t = normLabel(targetLabel);
+  // exact normalized match
+  let hit = domainLabels.find(lbl => normLabel(lbl) === t);
+  if (hit) return hit;
+  // starts-with / contains fallback
+  hit = domainLabels.find(lbl => normLabel(lbl).includes(t) || t.includes(normLabel(lbl)));
+  return hit || null;
+}
+
+
 
     // Normalize both CSVs into the same shape -> { Year, bucketId, bucket, share, count, geo }
     function normalize(rows, kind) {
@@ -217,7 +376,7 @@
           svg.append("text")
             .attr("x", width/2).attr("y", height/2)
             .attr("text-anchor", "middle")
-            .text("No data between 2013 and 2023.");
+            .text("No data between 2014 and 2023.");
           return;
         }
 
@@ -275,7 +434,7 @@
           .attr("y", y(0))
           .attr("width", x.bandwidth())
           .attr("height", 0)
-          .attr("fill", "#B6AED9")
+          .attr("fill", "#3783D4")
           .on("mousemove", (event, d) => {
             tip.style("opacity", 1)
                .style("left", (event.clientX + 12) + "px")
@@ -304,6 +463,8 @@
       );
 
       setProgressByIndex();
+      drawAnnotationsForYear(year);
+
     }
 
     // --- prediction on SAME chart ---
