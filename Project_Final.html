@@ -3,22 +3,42 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Final Narrative Project</title>
-  <meta name="description" content="description" />
-  <meta name="author" content="author" />
-  <meta name="keywords" content="keywords" />
-  <link rel="stylesheet" href="./stylesheet.css" type="text/css" />  
+  <title>Housing Prices v. Household Income in Illinois</title>
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
-    body {
-      font-family: 'Trebuchet MS', sans-serif;
-      margin: 0;
-      padding: 0;
+    body { font-family: 'Trebuchet MS', sans-serif; margin:0; padding-bottom:6%; }
+
+    hr.fancy{ 
+      width:70%; 
+      opacity:.3;
+      height:1px;
+      background-image:linear-gradient(to right, rgba(0,0,0,0), rgba(0,0,0,.75), rgba(0,0,0,0)); }
+    
+    h1{
+      margin:25px 0 20px 65px;
+      font-weight:bold; }
+
+    p.author{ margin-left:20%; }
+    
+    #bucket-chart{ width: 820px; margin: 20px; }
+    
+    .tooltip{
+      position: fixed; pointer-events:none; background:#111; color:#fff;
+      padding:6px 8px; border-radius:4px; font-size:12px; opacity:0; transition:opacity .15s;
+    }
+    
+    #myProgress{
+      width: 820px; height: 8px; background:#eee; border-radius:4px;
+      overflow:hidden; margin: 10px 20px;
+    }
+    #myBar{
+      height:100%; width:0%; background:#e0bade;
+      transition: width .6s linear; 
     }
 
     .b {
       width: 3%;
-      background: black;
+      background-color:rgb(218, 157, 167);
       color: whitesmoke;
       border-radius: 100%;
       font-weight: bold;
@@ -27,173 +47,388 @@
     }
 
     .b:hover {
-      background: rgb(105, 105, 105);
+      background: rgb(135, 89, 126);
       color: rgb(202, 202, 202);
       cursor: pointer;
       transition: background 0.5s;
     }
-
-    .mySlides {
-      display: none;
+    .toggle{
+      background-color:rgb(218, 157, 167);
     }
-
-    .container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 65vh;
+    .toggle:hover {
+      background: rgb(135, 89, 126);
+      color: rgb(231, 229, 229);
+      cursor: pointer;
+      transition: background 0.5s;
     }
-
-    .content {
-      word-wrap: break-word;
-      width: 60vw;
-      margin: 0 auto;
-      padding-top: 5px;
+    
+    .grid line {
+      stroke: #e9e9ee;
+      stroke-opacity: 1;
+      shape-rendering: crispEdges;
     }
+    .grid path { display: none; }
 
-    hr.fancy {
-      width: 70%;
-      opacity: 0.3;
-      height: 1px;
-      background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
-    }
-
-    h1 {
-      margin-left: 15px;
-      margin-top: 25px;
-      font-weight: bold;
-    }
-
-    p.author {
-      margin-left: 20%;
-    }
-
-    .mySlides{
-      margin-left: 2%;
-      margin-right: 2%;
-      width:800px; 
-      height:600px; 
-      padding-top: 2%;
-      padding-bottom: 2%;
-      border:1px solid #ccc;
-
-    }
-    #my_dataviz {
-       height: 400px;
-       text-align: center;
-    }
+    /* prediction outlines + labels */
+    .outline { fill: none; pointer-events:none; }
+    .outline.guess { stroke:#f5a142; stroke-width:3; }
+    .outline.actual{ stroke:#d9534f; stroke-width:3; }
+    .pill{ padding:2px 6px; border-radius:6px; font-size:12px; }
+    .pill.guess{ background:#fde9cf; color:#8a5a10; }
+    .pill.actual{ background:#f9d6d5; color:#7d1d1a; }
   </style>
-
-  <script>
-    let slideIndex = 1;
-
-    function plusSlides(n) {
-      showSlides(slideIndex += n);
-    }
-
-    function currentSlide(n) {
-      showSlides(slideIndex = n);
-    }
-
-    function showSlides(n) {
-      let i;
-      let slides = document.getElementsByClassName("mySlides");
-      if (n > slides.length) { slideIndex = 1 }
-      if (n < 1) { slideIndex = slides.length }
-      for (i = 0; i < slides.length; i++) {
-        slides[i].style.display = "none";
-      }
-      slides[slideIndex - 1].style.display = "block";
-    }
-
-    window.onload = function () {
-      showSlides(slideIndex);
-    }
-  </script>
-
 </head>
-
-
-
 <body>
 
-  <h1>Narrative Visualization: In Progress</h1>
+  <h1>Housing Prices v. Household Income in Illinois</h1>
   <hr class="fancy" />
   <p class="author">Emily Aguilar, 2025</p>
   <hr class="fancy" />
-
-  <div class="content">
-    <p>Hello ipsum dolor sit amet, consectetur adipiscing elit. Etiam elementum et dolor vel mollis. Vestibulum congue
-      ultricies aliquet. Mauris sit amet viverra nisl, at eleifend diam. Duis hendrerit ac massa consectetur feugiat.
-      Curabitur sit amet tellus at turpis semper posuere ac ac nunc. Aenean quis odio ornare, vulputate sem eget,
-      faucibus purus. Nulla sit amet sagittis est. Aenean gravida fermentum vulputate. Pellentesque vitae enim non est
-      semper ultricies eget id urna. Curabitur et sagittis nulla. Praesent nulla ex, volutpat non blandit volutpat,
-      ornare quis risus.</p>
+  
+  <div style="width:950px;margin-left: 10%;">
+    <p style="margin:2% 0 0 20%;">This project examines the growing gap between median income and home prices in Illinois from 2013 to 2023. It allows users to explore household income distribution over this period and compare it to the income needed to afford a home, calculated using the 3× affordability rule. Users can also examine the distribution of individual wages within Illinois for additional context. The goal of this analysis is to shed light on the potential challenges posed by rising housing prices outpacing household income growth.</p>
   </div>
- 
-  <div id="chart_income"></div>
 
-  <!-- Keep only this D3 -->
-<script src="https://d3js.org/d3.v7.min.js"></script>
+  <div id="bucket-chart" style="margin-left: auto;margin-right: auto; margin-top: 3%;"></div>
+  <div class="tooltip" id="tooltip"></div>
+  
+  <div class="container" style="position:relative;">
+    <button class="b" onclick="plusSlides(-1)" style="position:absolute;top:-25%;right:70%;margin-top: 10%;z-index: 1000;">&#10094;</button>
 
-<h1>Pick a CSV</h1>
-<input type="file" id="file" accept=".csv" />
-<div id="table"></div>
+    <div id="myProgress" style="margin-left: auto; margin-right: auto;">
+      <div id="myBar"></div>
+    </div>
+
+    <button class="b" onclick="plusSlides(1)" style="position:absolute;top:-25%;right:28%;margin-top: 10%;z-index: 1000;">&#10095;</button>
+    
+    <button id="toggleBtn" class="toggle" style="position:relative;border:none;padding:1em;border-radius: 10%;margin-left: 47%;margin-top: 2%;color: whitesmoke;" type="button" onclick="toggleDataset()">View Wages</button>
+  </div>
+
+  <div style="width:820px;margin:40px 32% auto; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+    <strong>Year: <span id="yearLabel">—</span></strong>
+    <input id="guess" type="number" placeholder="Guess required income (e.g., 65000)" style="width:220px;">
+    <button id="guessBtn" class="toggle" style="color:white; border:none; padding:.55em .9em; border-radius:8px;">Submit Guess</button>
+    <button id="clearBtn" style="border:1px solid #bbb; background:white; padding:.5em .8em; border-radius:8px;">Clear</button>
+    <span id="msg" style="margin-left:6px; font-weight:600;"></span>
+  </div>
 
   <script>
-    const fileInput = document.getElementById("file");
+    // --- layout ---
+    const margin = {top: 10, right: 70, bottom: 100, left: 70},
+          width  = 800 - margin.left - margin.right,
+          height = 520 - margin.top - margin.bottom;
+    
+    const svg = d3.select("#bucket-chart").append("svg")
+      .attr("width",  width  + margin.left + margin.right)
+      .attr("height", height + margin.top  + margin.bottom)
+      .append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
+    
+    const tip = d3.select("#tooltip");
+    const x = d3.scaleBand().range([0, width]).padding(0.15);
+    const y = d3.scaleLinear().range([height, 0]);
+    const xAxisG = svg.append("g").attr("transform", `translate(0,${height})`);
+    const yAxisG = svg.append("g");
+    const barsG  = svg.append("g");
+    const outlinesG = svg.append("g"); // overlays for guess/actual outlines
+    const labelsG   = svg.append("g"); // labels above outlines
+    const xGridG = svg.append("g").attr("class", "grid x-grid");
+    const yGridG = svg.append("g").attr("class", "grid y-grid");
+    
+    const yLabel = svg.append("text")
+      .attr("x", -height/2).attr("y", -40)
+      .attr("transform", "rotate(-90)")
+      .attr("text-anchor", "middle")
+      .text("Share of Households");
+    
+    const titleText = svg.append("text")
+      .attr("x", width/2).attr("y", height + 85)
+      .attr("text-anchor", "middle");
 
-    fileInput.addEventListener("change", e => {
-      const file = e.target.files[0];
-      if (!file) return;
+    // --- data holders ---
+    let householdDataByYear = new Map();
+    let wageDataByYear = new Map();
+    let affordabilityByYear = new Map(); // Year -> {Year, RequiredIncome, AvgHomeValue}
+    let years  = [];
+    let yearIdx = 0;
+    let useHouseholdData = true; // start with Household (Illinois)
+    let currentYearData = [];    // bars currently rendered (for outlines)
 
-      const reader = new FileReader();
-      reader.onload = evt => {
-        const text = evt.target.result;
-        const rows = d3.csvParse(text, d3.autoType);
-        renderTable(rows);
-      };
-      reader.readAsText(file);
-      
+    const LABELS = {
+      household: { unitPlural: "Households" },
+      wage:      { unitPlural: "Workers" }
+    };
+
+    const URL1 = "https://raw.githubusercontent.com/eaguilar02/Housing_Narrative_illinois/main/HouseholdIncome.csv";
+    const URL2 = "https://raw.githubusercontent.com/eaguilar02/Housing_Narrative_illinois/main/Wage%20Distribution.csv";
+    const AFF_URL = "https://raw.githubusercontent.com/eaguilar02/Housing_Narrative_illinois/refs/heads/main/Affordability%20-%20Sheet1.csv";
+    const STATE = "Illinois";
+
+    // Normalize both CSVs into the same shape -> { Year, bucketId, bucket, share, count, geo }
+    function normalize(rows, kind) {
+      return rows.map(d => {
+        const bucketId = kind === "household" ? +d["Household Income Bucket ID"] : +d["Wage Bin ID"];
+        const bucket   = kind === "household" ? d["Household Income Bucket"]     : d["Wage Bin"];
+        const count = d.Household_Income != null ? +d.Household_Income : null;
+        return { Year: +d.Year, bucketId, bucket, share: +d.share, count, geo: d.State };
+      });
+    }
+
+    // --- Load all three data files ---
+    Promise.all([ d3.csv(URL1), d3.csv(URL2), d3.text(AFF_URL) ])
+      .then(([householdRows, wageRows, affordText]) => {
+        // Household & Wage
+        const hNorm = normalize(householdRows, "household").filter(d => d.geo === STATE);           // Illinois
+        const wNorm = normalize(wageRows, "wage").filter(d => d.geo === "United States");           // national (as before)
+
+        d3.groups(hNorm, d => d.Year).forEach(([yr, arr]) => {
+          householdDataByYear.set(yr, arr.sort((a,b) => d3.ascending(a.bucketId, b.bucketId)));
+        });
+        d3.groups(wNorm, d => d.Year).forEach(([yr, arr]) => {
+          wageDataByYear.set(yr, arr.sort((a,b) => d3.ascending(a.bucketId, b.bucketId)));
         });
 
-    function renderTable(rows) {
-      d3.select("#table").html(""); // clear
-      if (!rows.length) return;
+        // Affordability CSV is one long line -> fix, then parse
+        let fixed = affordText
+          .replace(/\r/g, '')
+          .replace(/(3x Affordability Rule),/i, '$1\n') // newline after header
+          .replace(/(\s)(?=\d{4},)/g, '\n')             // newline before each "YYYY,"
+          .trim();
 
-      const columns = Object.keys(rows[0]);
-      const table = d3.select("#table").append("table");
-      const thead = table.append("thead").append("tr");
-      const tbody = table.append("tbody");
+        d3.csvParse(fixed).forEach(r => {
+          const Year = +r["Years"];
+          if (!Number.isFinite(Year)) return;
+          affordabilityByYear.set(Year, {
+            Year,
+            AvgHomeValue: +r["Average of Home Value in Illinois"],
+            RequiredIncome: +r["3x Affordability Rule"]
+          });
+        });
 
-      thead.selectAll("th")
-        .data(columns)
-        .enter().append("th")
-        .text(d => d);
+        const hYears = new Set(Array.from(householdDataByYear.keys()));
+        const wYears = new Set(Array.from(wageDataByYear.keys()));
+        const aYears = new Set(Array.from(affordabilityByYear.keys()));
+        years = Array.from(new Set([...hYears, ...wYears, ...aYears])).sort(d3.ascending);
 
-      const tr = tbody.selectAll("tr")
-        .data(rows)
-        .enter().append("tr");
+        const MIN_YEAR = 2014, MAX_YEAR = 2023;
+        years = years.filter(y => y >= MIN_YEAR && y <= MAX_YEAR);
 
-      tr.selectAll("td")
-        .data(row => columns.map(c => row[c]))
-        .enter().append("td")
-        .text(d => d);
+        if (years.length === 0) {
+          svg.append("text")
+            .attr("x", width/2).attr("y", height/2)
+            .attr("text-anchor", "middle")
+            .text("No data between 2013 and 2023.");
+          return;
+        }
+
+        const startYear = years.includes(MIN_YEAR) ? MIN_YEAR : years[0];
+        yearIdx = Math.max(0, years.indexOf(startYear));
+
+        update(years[yearIdx], false);
+        refreshToggleButton();
+
+      })
+      .catch(err => {
+        console.error("Data load failed:", err);
+        svg.append("text")
+          .attr("x", width/2).attr("y", height/2)
+          .attr("text-anchor", "middle")
+          .text("Failed to load CSV. Check console.");
+      });
+
+    function update(year, animate = true) {
+      const dataMap = useHouseholdData ? householdDataByYear : wageDataByYear;
+      const data = dataMap.get(year) || [];
+      currentYearData = data; 
+
+      document.getElementById("yearLabel").textContent = year ?? "—";
+      document.getElementById("msg").textContent = "";
+      clearHighlights(); 
+
+      titleText.text(`${useHouseholdData ? "Household Income" : "Wage"} Distribution (Year ${year})`);
+      yLabel.text(`Share of ${useHouseholdData ? LABELS.household.unitPlural : LABELS.wage.unitPlural}`);
+
+      x.domain(data.map(d => d.bucket));
+      y.domain([0, d3.max(data, d => d.share) || 1]).nice();
+
+      const t = animate ? svg.transition().duration(600) : svg;
+
+      xAxisG.transition(t).call(d3.axisBottom(x))
+        .selectAll("text")
+          .attr("text-anchor","end")
+          .attr("transform","rotate(-35)")
+          .attr("dx","-0.5em")
+          .attr("dy","0.25em");
+      yAxisG.transition(t).call(d3.axisLeft(y).tickFormat(d3.format(".0%")));
+
+      xGridG.attr("transform", `translate(0,${height})`)
+            .transition(t).call(d3.axisBottom(x).tickSize(-height).tickFormat(""));
+      yGridG.transition(t).call(d3.axisLeft(y).tickSize(-width).tickFormat(""));
+      xGridG.lower(); yGridG.lower();
+
+      const bars = barsG.selectAll("rect")
+        .data(data, d => d.bucket);
+
+      bars.join(
+        enter => enter.append("rect")
+          .attr("x", d => x(d.bucket))
+          .attr("y", y(0))
+          .attr("width", x.bandwidth())
+          .attr("height", 0)
+          .attr("fill", "#B6AED9")
+          .on("mousemove", (event, d) => {
+            tip.style("opacity", 1)
+               .style("left", (event.clientX + 12) + "px")
+               .style("top",  (event.clientY + 12) + "px")
+               .html(
+                 `<strong>${d.bucket}</strong><br>` +
+                 `Share Percentage: ${d3.format(".1%")(d.share)}<br>` +
+                 (d.count != null
+                   ? `Total number of ${useHouseholdData ? LABELS.household.unitPlural : LABELS.wage.unitPlural}: ${d3.format(",d")(d.count)}`
+                   : ``)
+               );
+          })
+          .on("mouseleave", () => tip.style("opacity", 0))
+          .transition(t)
+            .attr("y", d => y(d.share))
+            .attr("height", d => height - y(d.share)),
+        update => update.transition(t)
+          .attr("x", d => x(d.bucket))
+          .attr("y", d => y(d.share))
+          .attr("width", x.bandwidth())
+          .attr("height", d => height - y(d.share)),
+        exit => exit.transition(t)
+          .attr("y", y(0))
+          .attr("height", 0)
+          .remove()
+      );
+
+      setProgressByIndex();
     }
-    
+
+    // --- prediction on SAME chart ---
+    function clearHighlights(){
+      outlinesG.selectAll("*").remove();
+      labelsG.selectAll("*").remove();
+    }
+    function outlineBar(bucketLabel, cls, text){
+      const rec = currentYearData.find(d => d.bucket === bucketLabel);
+      if (!rec) return;
+      const rx = x(rec.bucket);
+      const ry = y(rec.share);
+      const rw = x.bandwidth();
+      const rh = height - ry;
+
+      outlinesG.append("rect")
+        .attr("class", `outline ${cls}`)
+        .attr("x", rx).attr("y", ry)
+        .attr("width", rw).attr("height", rh);
+
+      labelsG.append("text")
+        .attr("x", rx + rw/2).attr("y", Math.max(ry - 8, 12))
+        .attr("text-anchor","middle")
+        .style("font-size","12px")
+        .text(text);
+    }
+
+    function parseBucketRange(label){
+      const s = label.replace(/\s/g,'');
+      if (/^<\$\d/.test(s)) {
+        const hi = +s.replace(/^<\$/,'').replace(/[,$]/g,'');
+        return [0, hi];
+      }
+      if (/\+$/.test(s)) {
+        const lo = +s.replace(/[$,]/g,'').slice(0, -1);
+        return [lo, Infinity];
+      }
+      const m = s.match(/\$?([\d,]+)[–-]\$?([\d,]+)/);
+      if (m) {
+        const lo = +m[1].replace(/,/g,'');
+        const hi = +m[2].replace(/,/g,'');
+        return [lo, hi];
+      }
+      return [NaN, NaN];
+    }
+    function bucketForIncome(value, domainLabels){
+      for (const lbl of domainLabels){
+        const [lo, hi] = parseBucketRange(lbl);
+        if (!Number.isNaN(lo)) {
+          if (value >= lo && value <= hi) return lbl;
+          if (hi === Infinity && value >= lo) return lbl;
+        }
+      }
+      return null;
+    }
+
+    // --- controls ---
+    function setProgressByIndex() {
+      const pct = years.length > 1 ? ((yearIdx + 1) / years.length) * 100 : 100;
+      document.getElementById('myBar').style.width = pct + '%';
+    }
+    function plusSlides(n) {
+      if (!years.length) return;
+      yearIdx = (yearIdx + n + years.length) % years.length;
+      update(years[yearIdx]);
+    }
+    function currentSlide(n) {
+      if (!years.length) return;
+      yearIdx = Math.min(Math.max(0, n - 1), years.length - 1);
+      update(years[yearIdx]);
+    }
+    function toggleDataset() {
+      useHouseholdData = !useHouseholdData;
+      refreshToggleButton();
+      update(years[yearIdx], false);
+    }
+    function refreshToggleButton() {
+      const btn = document.getElementById('toggleBtn');
+      if (!btn) return;
+      btn.textContent = useHouseholdData ? 'View Wages' : 'View Household Income';
+    }
+
+    window.plusSlides = plusSlides;
+    window.currentSlide = currentSlide;
+    window.toggleDataset = toggleDataset;
+
+    // --- guess handlers ---
+    document.getElementById("guessBtn").addEventListener("click", () => {
+      const msg = document.getElementById("msg");
+      msg.textContent = "";
+      if (!years.length) return;
+
+      if (!useHouseholdData) {
+        msg.textContent = "Switch to Household Income to make an affordability guess.";
+        return;
+      }
+
+      const year = years[yearIdx];
+      const aff = affordabilityByYear.get(year);
+      if (!aff) { msg.textContent = "No affordability data for this year."; return; }
+
+      const guessVal = +document.getElementById("guess").value;
+      if (!Number.isFinite(guessVal) || guessVal <= 0) { msg.textContent = "Enter a positive number."; return; }
+
+      clearHighlights();
+
+      const labels = x.domain();
+      const guessBucket  = bucketForIncome(guessVal, labels);
+      const actualBucket = bucketForIncome(aff.RequiredIncome, labels);
+
+      if (!guessBucket)  { msg.textContent = "Guess is outside the bucket labels."; return; }
+      if (!actualBucket) { msg.textContent = "Actual value is outside the bucket labels for this view."; return; }
+
+      outlineBar(guessBucket,  "guess",  `Your guess: ${d3.format(",d")(guessVal)}`);
+      outlineBar(actualBucket, "actual", `Actual: ${d3.format(",d")(aff.RequiredIncome)}`);
+
+      const err = guessVal - aff.RequiredIncome;
+      const pct = err / aff.RequiredIncome;
+      msg.innerHTML = `<span class="pill actual">Actual</span> ${d3.format(",d")(aff.RequiredIncome)} &nbsp; • &nbsp; <span class="pill guess">Your guess</span> ${d3.format(",d")(guessVal)} &nbsp; • &nbsp; Error: ${d3.format("+,d")(err)} (${d3.format("+.1%")(pct)})`;
+    });
+
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      clearHighlights();
+      document.getElementById("msg").textContent = "";
+    });
   </script>
-
-
-<!--
-  <div class="container">
-    <button class="b" onclick="plusSlides(-1)">&#10094;</button>
-
-    <div id="my_dataviz" class="mySlides" src="about:blank" style="background:#FAF8F0;"></div>
-    <div class="mySlides" src="about:blank" style="background:green"></div>
-    <div class="mySlides" src="about:blank" style="background:red"></div>
-    <button class="b" onclick="plusSlides(1)">&#10095;</button>
-  </div>
--->
 </body>
-  
 </html>
