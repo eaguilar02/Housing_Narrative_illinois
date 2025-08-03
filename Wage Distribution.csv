@@ -1,4 +1,4 @@
-Wage Bin ID,Wage Bin,Year,Record Count,Total Population,Total Population MOE Appx,State,State ID,share
+Wage Bin ID,Wage Bin,Year,Record Count,Household_Income,Total Population MOE Appx,State,State ID,share
 1,"< $10K",2014,913396,18869684,99047.69181667948,"United States","01000US",0.13746927588547378
 1,"< $10K",2015,917319,18945648,99344.28471402325,"United States","01000US",0.13577506431071076
 1,"< $10K",2016,906288,18779566,99097.14242391725,"United States","01000US",0.13246462276977286
